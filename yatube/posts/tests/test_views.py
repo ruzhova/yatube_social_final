@@ -1,10 +1,11 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
-from posts.models import Follow, Group, Post
 
+from posts.models import Follow, Group, Post
 from yatube.settings import NUM_OF_POSTS
 
 User = get_user_model()
@@ -62,7 +63,6 @@ class PostPagesTests(TestCase):
 
     def setUp(self):
         self.guest_client = Client()
-        self.pk = 1
 
     def test_pages_use_correct_templates(self):
         """
@@ -319,3 +319,26 @@ class AdditionalVerification(TestCase):
             )
         )
         self.assertEqual(Follow.objects.count(), count + 1)
+
+
+class CacheTest(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user = User.objects.create_user(username='Pete')
+        cls.auth = Client()
+        cls.auth.force_login(cls.user)
+        cls.post = Post.objects.create(
+            text='great post for testing cache!',
+            author=cls.user,
+        )
+
+    def test_cash_index_page(self):
+        """Тестирование кэша."""
+        response_before = self.auth.get(reverse('posts:index'))
+        Post.objects.filter(author=self.user).delete()
+        response_after = self.auth.get(reverse('posts:index'))
+        self.assertEqual(response_after.content, response_before.content)
+        cache.clear()
+        cache_cleared = self.auth.get(reverse('posts:index'))
+        self.assertNotEqual(cache_cleared.content, response_before.content)
