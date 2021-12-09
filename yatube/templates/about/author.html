@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}<title>Об авторе проекта</title>{% endblock %}
+{% block content %}
+{% load static %} 
+<h1>Привет, я автор</h1>
+<div class="row">
+  <aside class="col-12 col-md-3">
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item">
+        Автор: Анастасия Рыжова
+      </li>
+      <li class="list-group-item">
+        Дата рождения: 12/07/2001
+      </li>
+      <li class="list-group-item">
+        Место учебы: 
+        <a href="https://www.spbstu.ru">
+          СПБПУ Петра Великого
+        </a>
+      </li>
+      <li class="list-group-item">
+        Фотокарточка автора: <img src="{% static 'img/author.jpg' %}" 
+        width="32" height="27,6" class="d-inline-block align-top" alt="">
+      </li>
+    </ul>
+  </aside>
+  <article class="col-12 col-md-9">
+    <p>
+      Я люблю рисовать, смешных котов и лягушек. 
+    </p>
+  </article>
+</div>
+{% endblock %}
