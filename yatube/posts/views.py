@@ -42,24 +42,19 @@ def profile(request, username):
     if request.user.is_authenticated:
         users_following = Follow.objects.filter(
             author__following__user=request.user
-        ).all()
-        exist = users_following.filter(
-            user=request.user,
-            author=writer
         )
-        following = True if (exist and writer != request.user) else False
-        not_current_user = False if writer == request.user else True
+        if users_following.filter(user=request.user, author=writer):
+            following = True
+        else:
+            following = False
     else:
         following = False
-        not_current_user = False
 
     context = {
         'writer': writer,
         'page_obj': page_obj,
         'following': following,
-        'not_current_user': not_current_user,
     }
-
     return render(request, 'posts/profile.html', context)
 
 
@@ -97,6 +92,9 @@ def post_create(request):
 @login_required
 def post_edit(request, post_id):
     editable_post = get_object_or_404(Post, id=post_id)
+    if request.user != editable_post.author:
+        return redirect('posts:post_detail', post_id)
+
     form = PostForm(
         request.POST or None,
         files=request.FILES or None,
@@ -104,9 +102,6 @@ def post_edit(request, post_id):
     )
     if form.is_valid():
         form.save()
-        return redirect('posts:post_detail', post_id)
-
-    if request.user != editable_post.author:
         return redirect('posts:post_detail', post_id)
 
     context = {
@@ -131,7 +126,7 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
-    following = Post.objects.filter(author__following__user=request.user).all()
+    following = Post.objects.filter(author__following__user=request.user)
     page_obj = paginator_func(request, following)
     context = {
         'page_obj': page_obj

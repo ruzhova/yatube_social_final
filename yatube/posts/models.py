@@ -64,7 +64,7 @@ class Comment(models.Model):
     )
     text = models.TextField(
         'Текст комментария',
-        help_text='Текст нового комментария'
+        help_text='Введите текст комментария'
     )
     created = models.DateTimeField(
         'Дата добавления комментария',
@@ -93,3 +93,10 @@ class Follow(models.Model):
         related_name='following',
         verbose_name='Автор'
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'], name='user_author_unique'
+            ),
+        ]

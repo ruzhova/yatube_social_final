@@ -5,7 +5,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from posts.models import Follow, Group, Post
+from posts.models import Comment, Follow, Group, Post
 from yatube.settings import NUM_OF_POSTS
 
 User = get_user_model()
@@ -167,19 +167,21 @@ class PaginatorViewsTest(TestCase):
             ) for i in range(13)
         ])
 
-    def test_first_page_contains_13_records(self):
+    def test_page_contains_records(self):
         """
         Проверка, что на первой странице находится 10 постов,
         а на второй странице 3 поста.
         """
-        response_10 = self.client.get(reverse('posts:index'))
-        self.assertEqual(len(response_10.context['page_obj']), NUM_OF_POSTS)
-        if (Post.objects.count() - NUM_OF_POSTS > NUM_OF_POSTS):
-            remain = NUM_OF_POSTS
-        else:
-            remain = Post.objects.count() - NUM_OF_POSTS
-        response_3 = self.client.get(reverse('posts:index') + '?page=2')
-        self.assertEqual(len(response_3.context['page_obj']), remain)
+        params = {
+            reverse('posts:index'): NUM_OF_POSTS,
+            (
+                reverse('posts:index') + '?page=2'
+            ): Post.objects.count() - NUM_OF_POSTS,
+        }
+        for adress, count in params.items():
+            with self.subTest(adress=adress):
+                response = self.client.get(adress)
+                (len(response.context['page_obj']), count)
 
 
 class AdditionalVerification(TestCase):
@@ -192,6 +194,9 @@ class AdditionalVerification(TestCase):
         cls.user_not_author = User.objects.create_user(username='ErinHannon')
         cls.auth_not_author = Client()
         cls.auth_not_author.force_login(cls.user_not_author)
+        cls.not_follower = User.objects.create_user(username='Creed')
+        cls.auth_not_foll = Client()
+        cls.auth_not_foll.force_login(cls.not_follower)
         cls.client_group = Group.objects.create(
             title='Office',
             slug='slugclient',
@@ -255,6 +260,13 @@ class AdditionalVerification(TestCase):
             reverse('posts:post_detail', args=[self.newpost.pk])
         )
         self.assertEqual(len(response.context['comments']), 1)
+        self.assertTrue(
+            Comment.objects.filter(
+                text='test comment text',
+                author=self.user_author,
+                post=self.newpost,
+            ).exists()
+        )
 
     def test_add_comment_check_guest(self):
         """
@@ -272,21 +284,31 @@ class AdditionalVerification(TestCase):
         self.assertEqual(len(response.context['comments']), 0)
 
     def follow_page_context(self):
-        """Проверка контекста страницы подписок у пользователя."""
+        """
+        Новая запись пользователя появляется в ленте тех, кто на него
+        подписан и не появляется в ленте тех, кто не подписан.
+        """
         Follow.objects.create(
             user=self.user_not_author,
             author=self.user_author
         )
-        response_auth = self.auth_not_author.get(
+        self.auth_not_author.get(
             reverse(
                 'posts:profile_follow',
                 args=[self.user_author.username]
             )
         )
+        response_foll = self.auth_not_author.get(
+            reverse('posts:follow_index')
+        )
+        response_not_foll = self.auth_not_foll.get(
+            reverse('posts:follow_index')
+        )
         count = Post.objects.filter(author=self.user_author).count()
         if count > NUM_OF_POSTS:
             count = NUM_OF_POSTS
-        self.assertEqual(len(response_auth.context['page_obj']), count)
+        self.assertEqual(len(response_foll.context['page_obj']), count)
+        self.assertEqual(len(response_not_foll.context['page_obj']), 0)
 
     def test_unfollow_auth(self):
         """

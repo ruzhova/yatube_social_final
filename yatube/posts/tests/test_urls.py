@@ -38,15 +38,15 @@ class PostURLTests(TestCase):
             '/create/': 'posts/create_post.html',
         }
         cls.page_not_exist = '/unexisting_page/'
-        cls.page_cannot_be_edited = f'/posts/{cls.post.pk}/edit/'
+        cls.page_edit = f'/posts/{cls.post.pk}/edit/'
 
     def setUp(self):
         self.guest_client = Client()
 
     def test_urls_uses_correct_template_not_authorized(self):
         """
-        URL-адрес использует соответствующий шаблон;
-        пользователь - неавторизированный.
+        URL-адрес использует соответствующий шаблон; неавторизированный
+        пользователь.
         """
         for adress, template in self.templates_url_names.items():
             with self.subTest(adress=adress):
@@ -64,19 +64,22 @@ class PostURLTests(TestCase):
 
     def test_302_not_authorized(self):
         """
-        Проверка, что неавторизированный пользователь
-        не может создавать или редактировать посты.
+        Проверка, что неавторизированный пользователь не может создавать
+        или редактировать посты и перенаправляется на страницу входа.
         """
         for address, template in self.templates_url_names.items():
             with self.subTest(address=address):
                 if template == 'posts/create_post.html':
                     response = self.guest_client.get(address)
                     self.assertEqual(response.status_code, HTTPStatus.FOUND)
+                    self.assertRedirects(
+                        response,
+                        f'/auth/login/?next={address}'
+                    )
 
     def test_urls_uses_correct_template_author(self):
         """
-        URL-адрес использует соответствующий шаблон;
-        пользователь - авторизированный, автор.
+        URL-адрес использует соответствующий шаблон; автор поста.
         """
         for adress, template in self.templates_url_names.items():
             with self.subTest(adress=adress):
@@ -93,8 +96,8 @@ class PostURLTests(TestCase):
 
     def test_urls_uses_correct_template_authorized_non_author(self):
         """
-        URL-адрес использует соответствующий шаблон;
-        пользователь - авторизированный, не автор.
+        URL-адрес использует соответствующий шаблон; авторизированный
+        пользователь, не автор.
         """
         for adress, template in self.templates_url_names.items():
             with self.subTest(adress=adress):
@@ -104,8 +107,9 @@ class PostURLTests(TestCase):
 
     def test_302_non_author(self):
         """
-        Проверка, что пользователь, не являющийся автором поста,
-        не может его редактировать.
+        Проверка, что пользователь, не являющийся автором поста, не может
+        его редактировать и перенаправляется на страницу поста.
         """
-        response = self.authorized_client.get(self.page_cannot_be_edited)
+        response = self.authorized_client.get(self.page_edit)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertRedirects(response, f'/posts/{self.post.pk}/')
