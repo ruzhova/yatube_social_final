@@ -39,14 +39,9 @@ def profile(request, username):
     writers_posts = writer.posts.all()
     page_obj = paginator_func(request, writers_posts)
 
-    if request.user.is_authenticated:
-        users_following = Follow.objects.filter(
-            author__following__user=request.user
-        )
-        if users_following.filter(user=request.user, author=writer):
-            following = True
-        else:
-            following = False
+    if (request.user.is_authenticated and Follow.objects.filter(
+            user=request.user, author=writer)):
+        following = True
     else:
         following = False
 

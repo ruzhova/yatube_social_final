@@ -283,15 +283,11 @@ class AdditionalVerification(TestCase):
         )
         self.assertEqual(len(response.context['comments']), 0)
 
-    def follow_page_context(self):
+    def test_follow_index_page_context_follower(self):
         """
-        Новая запись пользователя появляется в ленте тех, кто на него
-        подписан и не появляется в ленте тех, кто не подписан.
+        Новая запись пользователя появляется в ленте тех,
+        кто на него подписан.
         """
-        Follow.objects.create(
-            user=self.user_not_author,
-            author=self.user_author
-        )
         self.auth_not_author.get(
             reverse(
                 'posts:profile_follow',
@@ -301,13 +297,16 @@ class AdditionalVerification(TestCase):
         response_foll = self.auth_not_author.get(
             reverse('posts:follow_index')
         )
+        self.assertIn(self.newpost, response_foll.context['page_obj'])
+
+    def test_follow_index_page_not_follower(self):
+        """
+        Новая запись пользователя не появляется в ленте тех,
+        кто на него не подписан.
+        """
         response_not_foll = self.auth_not_foll.get(
             reverse('posts:follow_index')
         )
-        count = Post.objects.filter(author=self.user_author).count()
-        if count > NUM_OF_POSTS:
-            count = NUM_OF_POSTS
-        self.assertEqual(len(response_foll.context['page_obj']), count)
         self.assertEqual(len(response_not_foll.context['page_obj']), 0)
 
     def test_unfollow_auth(self):
