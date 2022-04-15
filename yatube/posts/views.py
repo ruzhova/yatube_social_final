@@ -38,7 +38,7 @@ def profile(request, username):
     writer = get_object_or_404(User, username=username)
     writers_posts = writer.posts.all()
     page_obj = paginator_func(request, writers_posts)
-
+    param_follow = True if writer != request.user else False
     if (request.user.is_authenticated and Follow.objects.filter(
             user=request.user, author=writer)):
         following = True
@@ -49,6 +49,7 @@ def profile(request, username):
         'writer': writer,
         'page_obj': page_obj,
         'following': following,
+        'param_follow':param_follow,
     }
     return render(request, 'posts/profile.html', context)
 
