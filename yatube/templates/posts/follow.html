@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 {% load thumbnail %}
-{% block title %} <title>Подписки </title>{% endblock%}
+{% block title %} <title>Подписки</title>{% endblock%}
+{% block header %}Подписки{% endblock %}
 {% block content%}
+<h1>Подписки</h1>
   {% include 'posts/includes/switcher.html' %}
   {% for post in page_obj %}
     {% include 'posts/includes/post_list.html' %}

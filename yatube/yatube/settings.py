@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -18,12 +21,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
-
+SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '3_c_g(9b!e=5d7__jvh#k42o^_v2kv%a=$!t@-(k!0z^yg)*bk'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True #False #True
+DEBUG = True #False 
 
 ALLOWED_HOSTS = [
     'localhost',

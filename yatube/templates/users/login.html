@@ -3,7 +3,7 @@
 {% block content %}
 {% load user_filters %}
   <div class="row justify-content-center">
-    <div class="col-md-8 p-5">
+    <div class="col-md-8 p-5" style="max-width: 600px;">
       <div class="card">
         <div class="card-header">
           Войти на сайт
@@ -32,7 +32,7 @@
             {% csrf_token %}
 
             {% for field in form %}
-              <div class="form-group row my-3"
+              <div class="form-group column my-3"
                 {% if field.field.required %} 
                   aria-required="true"
                 {% else %}
@@ -55,7 +55,7 @@
                 </div>
               </div>
             {% endfor %}
-            <div class="col-md-6 offset-md-4">
+            <div class="offset-md-4">
               <button type="submit" class="btn btn-primary">
                 Войти
               </button>
